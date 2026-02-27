@@ -6,6 +6,7 @@ import { useTheme } from "@/app/providers";
 
 const NAV_ITEMS = [
   { href: "/", icon: "🗺️", label: "Manor Map" },
+  { href: "/chat", icon: "💬", label: "Messages" },
   { href: "/crons", icon: "⏰", label: "Cron Monitor" },
   { href: "/memory", icon: "🧠", label: "Memory" },
 ];
