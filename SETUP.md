@@ -15,6 +15,10 @@ This guide walks you through getting ClawPort running against your own OpenClaw 
 ## 1. Install ClawPort
 
 ```bash
+# Install from npm
+npm install clawport-ui
+
+# Or clone the repo
 git clone https://github.com/openclaw/clawport.git
 cd clawport
 npm install

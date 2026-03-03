@@ -1,13 +1,31 @@
 {
-  "name": "clawport",
+  "name": "clawport-ui",
   "version": "0.1.0",
-  "private": true,
+  "description": "Open-source dashboard for managing, monitoring, and chatting with your OpenClaw AI agents.",
+  "homepage": "https://clawport.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openclaw/clawport.git"
+  },
+  "bugs": {
+    "url": "https://github.com/openclaw/clawport/issues"
+  },
+  "keywords": [
+    "openclaw",
+    "ai-agents",
+    "dashboard",
+    "clawport",
+    "agent-management",
+    "next.js"
+  ],
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "setup": "node scripts/setup.mjs"
+    "setup": "node scripts/setup.mjs",
+    "prepublishOnly": "npx tsc --noEmit && vitest run"
   },
   "dependencies": {
     "@xyflow/react": "^12.10.1",

@@ -377,7 +377,7 @@ export default function SettingsPage() {
                       flexShrink: 0,
                     }}
                   >
-                    {settings.portalEmoji ?? '\ud83c\udff0'}
+                    {settings.portalEmoji ?? '\ud83e\udd9e'}
                   </div>
                 )}
 
@@ -385,7 +385,7 @@ export default function SettingsPage() {
                 <input
                   type="text"
                   className="apple-input"
-                  placeholder={'\ud83c\udff0'}
+                  placeholder={'\ud83e\udd9e'}
                   value={emojiValue}
                   onChange={(e) => setEmojiValue(e.target.value)}
                   onBlur={() => setPortalEmoji(emojiValue || null)}

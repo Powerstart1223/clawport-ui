@@ -259,7 +259,7 @@ export function OnboardingWizard({ forceOpen, onClose }: OnboardingWizardProps) 
                 marginBottom: 'var(--space-3)',
                 lineHeight: 1,
               }}>
-                {settings.portalEmoji ?? '\ud83c\udff0'}
+                {settings.portalEmoji ?? '\ud83e\udd9e'}
               </div>
               <h2 style={{
                 fontSize: 'var(--text-large-title)',
@@ -664,7 +664,7 @@ export function OnboardingWizard({ forceOpen, onClose }: OnboardingWizardProps) 
                     fontSize: 16,
                     flexShrink: 0,
                   }}>
-                    {settings.portalEmoji ?? '\ud83c\udff0'}
+                    {settings.portalEmoji ?? '\ud83e\udd9e'}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{

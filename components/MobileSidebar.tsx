@@ -124,7 +124,7 @@ export function MobileSidebar({
                 flexShrink: 0,
               }}
             >
-              {settings.portalEmoji ?? '\ud83c\udff0'}
+              {settings.portalEmoji ?? '\ud83e\udd9e'}
             </span>
           )}
           <span
@@ -211,7 +211,7 @@ export function MobileSidebar({
                   flexShrink: 0,
                 }}
               >
-                {settings.portalEmoji ?? '\ud83c\udff0'}
+                {settings.portalEmoji ?? '\ud83e\udd9e'}
               </div>
             )}
             <div>

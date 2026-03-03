@@ -17,11 +17,12 @@ ClawPort is an open-source dashboard for managing, monitoring, and talking direc
 ### Quick Start
 
 ```bash
-# Clone the repo
+# Install from npm
+npx clawport-ui
+
+# Or clone the repo
 git clone https://github.com/openclaw/clawport.git
 cd clawport
-
-# Install dependencies
 npm install
 
 # Auto-detect your OpenClaw config and write .env.local
@@ -254,6 +255,16 @@ npx next build       # Production build
 ## Built by
 
 [John Rice](https://github.com/johnrice) with [Jarvis](https://openclaw.ai) (OpenClaw AI)
+
+---
+
+## npm
+
+```bash
+npm install clawport-ui
+```
+
+Published as [`clawport-ui`](https://www.npmjs.com/package/clawport-ui) on npm.
 
 ---
 

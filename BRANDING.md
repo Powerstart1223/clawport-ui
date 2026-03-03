@@ -77,8 +77,9 @@ Changing these breaks existing users' saved data. Requires a migration function 
 
 | Location | Current Value |
 |----------|---------------|
-| `package.json` `name` | `clawport` |
-| `package-lock.json` `name` | `clawport` |
+| `package.json` `name` | `clawport-ui` |
+| `package-lock.json` `name` | `clawport-ui` |
+| npm package | [`clawport-ui`](https://www.npmjs.com/package/clawport-ui) |
 | Git clone URLs in docs | `https://github.com/openclaw/clawport.git` |
 
 ## 7. Workspace Paths

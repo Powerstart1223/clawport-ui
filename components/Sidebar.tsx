@@ -69,7 +69,7 @@ export function Sidebar() {
                   flexShrink: 0,
                 }}
               >
-                {settings.portalEmoji ?? '\ud83c\udff0'}
+                {settings.portalEmoji ?? '\ud83e\udd9e'}
               </div>
             )}
             <div>

@@ -11,7 +11,7 @@ export function DynamicFavicon() {
   const { settings } = useSettings()
 
   useEffect(() => {
-    const emoji = settings.portalEmoji ?? '\ud83c\udff0'
+    const emoji = settings.portalEmoji ?? '\ud83e\udd9e'
     const icon = settings.portalIcon
     const accentColor = settings.accentColor
     const bgHidden = settings.iconBgHidden
