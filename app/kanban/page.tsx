@@ -16,6 +16,7 @@ import { useAgentWork } from '@/lib/kanban/useAgentWork'
 import { KanbanBoard } from '@/components/kanban/KanbanBoard'
 import { CreateTicketModal } from '@/components/kanban/CreateTicketModal'
 import { TicketDetailPanel } from '@/components/kanban/TicketDetailPanel'
+import { AgentAvatar } from '@/components/AgentAvatar'
 import { ErrorState } from '@/components/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -26,6 +27,7 @@ export default function KanbanPage() {
   const [error, setError] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<KanbanTicket | null>(null)
+  const [filterAgentId, setFilterAgentId] = useState<string | null>(null)
 
   const loadData = useCallback(() => {
     setLoading(true)
@@ -128,6 +130,14 @@ export default function KanbanPage() {
 
   const ticketCount = Object.keys(tickets).length
 
+  // Agents that have at least one ticket assigned
+  const assignedAgentIds = new Set(
+    Object.values(tickets)
+      .map((t) => t.assigneeId)
+      .filter(Boolean),
+  )
+  const assignedAgents = agents.filter((a) => assignedAgentIds.has(a.id))
+
   return (
     <div className="flex h-full relative" style={{ background: 'var(--bg)' }}>
       {/* Board area */}
@@ -184,6 +194,73 @@ export default function KanbanPage() {
           </button>
         </div>
 
+        {/* Agent filter bar */}
+        {assignedAgents.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+              padding: 'var(--space-2) var(--space-5)',
+              overflowX: 'auto',
+              flexShrink: 0,
+            }}
+          >
+            <button
+              onClick={() => setFilterAgentId(null)}
+              className="focus-ring"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-1)',
+                padding: '4px 12px',
+                borderRadius: 'var(--radius-full)',
+                border: 'none',
+                fontSize: 'var(--text-caption1)',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: filterAgentId === null ? 'var(--accent)' : 'var(--fill-tertiary)',
+                color: filterAgentId === null ? 'white' : 'var(--text-secondary)',
+                flexShrink: 0,
+              }}
+            >
+              All
+            </button>
+            {assignedAgents.map((agent) => (
+              <button
+                key={agent.id}
+                onClick={() =>
+                  setFilterAgentId(filterAgentId === agent.id ? null : agent.id)
+                }
+                className="focus-ring"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-1)',
+                  padding: '4px 12px 4px 4px',
+                  borderRadius: 'var(--radius-full)',
+                  border: 'none',
+                  fontSize: 'var(--text-caption1)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  background:
+                    filterAgentId === agent.id
+                      ? `${agent.color}30`
+                      : 'var(--fill-tertiary)',
+                  color:
+                    filterAgentId === agent.id
+                      ? agent.color
+                      : 'var(--text-secondary)',
+                  flexShrink: 0,
+                }}
+              >
+                <AgentAvatar agent={agent} size={20} borderRadius={10} />
+                {agent.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Board */}
         <div style={{ flex: 1, padding: '0 var(--space-3)', minHeight: 0 }}>
           {loading ? (
@@ -209,6 +286,7 @@ export default function KanbanPage() {
               onMoveTicket={handleMoveTicket}
               onCreateTicket={() => setCreateOpen(true)}
               isWorking={isWorking}
+              filterAgentId={filterAgentId}
             />
           )}
         </div>

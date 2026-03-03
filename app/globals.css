@@ -391,6 +391,11 @@ body {
   to { opacity: 0; }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Typing dots */
 @keyframes bounce-dot {
   0%, 60%, 100% { transform: translateY(0); }

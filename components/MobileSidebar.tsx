@@ -135,7 +135,7 @@ export function MobileSidebar({
               letterSpacing: '-0.2px',
             }}
           >
-            {settings.manorName ?? 'Manor'} {settings.manorSubtitle ?? 'Command Centre'}
+            {settings.manorName ?? 'Agent Claw'} {settings.manorSubtitle ?? 'Command Centre'}
           </span>
         </div>
       </header>
@@ -223,7 +223,7 @@ export function MobileSidebar({
                   color: 'var(--text-primary)',
                 }}
               >
-                {settings.manorName ?? 'Manor'}
+                {settings.manorName ?? 'Agent Claw'}
               </div>
               <div
                 style={{

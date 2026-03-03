@@ -1,25 +1,14 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const { mockReadFileSync, mockExistsSync } = vi.hoisted(() => ({
+const { mockReadFileSync, mockExistsSync, bundledAgents } = vi.hoisted(() => ({
   mockReadFileSync: vi.fn(),
   mockExistsSync: vi.fn(),
-}))
-
-// Mock fs (Dependency Inversion -- no real file system access in tests)
-vi.mock('fs', () => ({
-  readFileSync: mockReadFileSync,
-  existsSync: mockExistsSync,
-  default: { readFileSync: mockReadFileSync, existsSync: mockExistsSync },
-}))
-
-// Mock the agents.json import with representative test data
-vi.mock('@/lib/agents.json', () => ({
-  default: [
+  bundledAgents: [
     {
       id: 'jarvis',
       name: 'Jarvis',
-      title: 'Manor Orchestrator',
+      title: 'Orchestrator',
       reportsTo: null,
       directReports: ['vera', 'lumen', 'pulse'],
       soulPath: 'SOUL.md',
@@ -28,7 +17,7 @@ vi.mock('@/lib/agents.json', () => ({
       emoji: 'R',
       tools: ['exec', 'read', 'write'],
       memoryPath: null,
-      description: 'Manor orchestrator.',
+      description: 'Top-level orchestrator.',
     },
     {
       id: 'vera',
@@ -117,15 +106,126 @@ vi.mock('@/lib/agents.json', () => ({
   ],
 }))
 
+// Mock fs (Dependency Inversion -- no real file system access in tests)
+vi.mock('fs', () => ({
+  readFileSync: mockReadFileSync,
+  existsSync: mockExistsSync,
+  default: { readFileSync: mockReadFileSync, existsSync: mockExistsSync },
+}))
+
+// Mock the bundled agents.json
+vi.mock('@/lib/agents.json', () => ({
+  default: bundledAgents,
+}))
+
+// We need to import AFTER mocks are set up
 import { getAgents, getAgent } from './agents'
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.unstubAllEnvs()
   // Default: no SOUL files exist on disk
   mockExistsSync.mockReturnValue(false)
 })
 
-// --- getAgents ---
+// ---------------------------------------------------------------------------
+// Registry loading: bundled fallback vs workspace override
+// ---------------------------------------------------------------------------
+
+describe('agent registry loading', () => {
+  it('loads from bundled JSON when WORKSPACE_PATH is not set', async () => {
+    vi.stubEnv('WORKSPACE_PATH', '')
+    const agents = await getAgents()
+    expect(agents.length).toBe(bundledAgents.length)
+    expect(agents.map(a => a.id)).toContain('jarvis')
+  })
+
+  it('loads from bundled JSON when workspace override file does not exist', async () => {
+    vi.stubEnv('WORKSPACE_PATH', '/tmp/test-workspace')
+    mockExistsSync.mockReturnValue(false)
+    const agents = await getAgents()
+    expect(agents.length).toBe(bundledAgents.length)
+  })
+
+  it('loads from workspace override when manor/agents.json exists', async () => {
+    vi.stubEnv('WORKSPACE_PATH', '/tmp/test-workspace')
+
+    const customAgents = [
+      {
+        id: 'custom-bot',
+        name: 'CustomBot',
+        title: 'Custom Agent',
+        reportsTo: null,
+        directReports: [],
+        soulPath: null,
+        voiceId: null,
+        color: '#ff0000',
+        emoji: 'C',
+        tools: ['read'],
+        memoryPath: null,
+        description: 'A custom agent.',
+      },
+    ]
+
+    mockExistsSync.mockImplementation((path: string) => {
+      if (path === '/tmp/test-workspace/manor/agents.json') return true
+      return false
+    })
+    mockReadFileSync.mockImplementation((path: string) => {
+      if (path === '/tmp/test-workspace/manor/agents.json') {
+        return JSON.stringify(customAgents)
+      }
+      throw new Error('ENOENT')
+    })
+
+    const agents = await getAgents()
+    expect(agents.length).toBe(1)
+    expect(agents[0].id).toBe('custom-bot')
+    expect(agents[0].name).toBe('CustomBot')
+  })
+
+  it('falls back to bundled JSON when workspace agents.json is malformed', async () => {
+    vi.stubEnv('WORKSPACE_PATH', '/tmp/test-workspace')
+
+    mockExistsSync.mockImplementation((path: string) => {
+      if (path === '/tmp/test-workspace/manor/agents.json') return true
+      return false
+    })
+    mockReadFileSync.mockImplementation((path: string) => {
+      if (path === '/tmp/test-workspace/manor/agents.json') {
+        return '{ invalid json !!!'
+      }
+      throw new Error('ENOENT')
+    })
+
+    const agents = await getAgents()
+    // Should fall back to bundled agents, not crash
+    expect(agents.length).toBe(bundledAgents.length)
+    expect(agents.map(a => a.id)).toContain('jarvis')
+  })
+
+  it('falls back to bundled JSON when workspace agents.json read throws', async () => {
+    vi.stubEnv('WORKSPACE_PATH', '/tmp/test-workspace')
+
+    mockExistsSync.mockImplementation((path: string) => {
+      if (path === '/tmp/test-workspace/manor/agents.json') return true
+      return false
+    })
+    mockReadFileSync.mockImplementation((path: string) => {
+      if (path === '/tmp/test-workspace/manor/agents.json') {
+        throw new Error('EACCES')
+      }
+      throw new Error('ENOENT')
+    })
+
+    const agents = await getAgents()
+    expect(agents.length).toBe(bundledAgents.length)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getAgents
+// ---------------------------------------------------------------------------
 
 describe('getAgents', () => {
   it('returns all agents from the registry', async () => {
@@ -158,7 +258,16 @@ describe('getAgents', () => {
     expect(ids).toContain('kaze')
   })
 
+  it('sets soul to null when WORKSPACE_PATH is not set', async () => {
+    vi.stubEnv('WORKSPACE_PATH', '')
+    const agents = await getAgents()
+    const jarvis = agents.find(a => a.id === 'jarvis')!
+    expect(jarvis.soulPath).toBeTruthy()
+    expect(jarvis.soul).toBeNull()
+  })
+
   it('sets soul to null when soulPath file does not exist', async () => {
+    vi.stubEnv('WORKSPACE_PATH', '/tmp/ws')
     mockExistsSync.mockReturnValue(false)
     const agents = await getAgents()
     const jarvis = agents.find(a => a.id === 'jarvis')!
@@ -167,7 +276,12 @@ describe('getAgents', () => {
   })
 
   it('reads soul content when soulPath file exists', async () => {
-    mockExistsSync.mockReturnValue(true)
+    vi.stubEnv('WORKSPACE_PATH', '/tmp/ws')
+    mockExistsSync.mockImplementation((path: string) => {
+      // Only the SOUL file exists, not the workspace override
+      if (path === '/tmp/ws/manor/agents.json') return false
+      return true
+    })
     mockReadFileSync.mockReturnValue('# Jarvis SOUL')
     const agents = await getAgents()
     const jarvis = agents.find(a => a.id === 'jarvis')!
@@ -175,7 +289,11 @@ describe('getAgents', () => {
   })
 
   it('sets soul to null when readFileSync throws', async () => {
-    mockExistsSync.mockReturnValue(true)
+    vi.stubEnv('WORKSPACE_PATH', '/tmp/ws')
+    mockExistsSync.mockImplementation((path: string) => {
+      if (path === '/tmp/ws/manor/agents.json') return false
+      return true
+    })
     mockReadFileSync.mockImplementation(() => { throw new Error('EACCES') })
     const agents = await getAgents()
     const jarvis = agents.find(a => a.id === 'jarvis')!
@@ -190,6 +308,8 @@ describe('getAgents', () => {
   })
 
   it('agents with no soulPath get soul=null without reading fs', async () => {
+    vi.stubEnv('WORKSPACE_PATH', '/tmp/ws')
+    mockExistsSync.mockReturnValue(false)
     const agents = await getAgents()
     const scout = agents.find(a => a.id === 'scout')!
     expect(scout.soulPath).toBeNull()
@@ -197,7 +317,9 @@ describe('getAgents', () => {
   })
 })
 
-// --- getAgent ---
+// ---------------------------------------------------------------------------
+// getAgent
+// ---------------------------------------------------------------------------
 
 describe('getAgent', () => {
   it('returns the correct agent by id', async () => {

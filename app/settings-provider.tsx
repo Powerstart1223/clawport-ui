@@ -26,6 +26,7 @@ interface SettingsContextValue {
   setManorIcon: (icon: string | null) => void
   setIconBgHidden: (hidden: boolean) => void
   setEmojiOnly: (emojiOnly: boolean) => void
+  setOperatorName: (name: string | null) => void
   setAgentOverride: (agentId: string, override: AgentOverride) => void
   clearAgentOverride: (agentId: string) => void
   getAgentDisplay: (agent: Agent) => AgentDisplay
@@ -33,7 +34,7 @@ interface SettingsContextValue {
 }
 
 const SettingsContext = createContext<SettingsContextValue>({
-  settings: { accentColor: null, manorName: null, manorSubtitle: null, manorEmoji: null, manorIcon: null, iconBgHidden: false, emojiOnly: false, agentOverrides: {} },
+  settings: { accentColor: null, manorName: null, manorSubtitle: null, manorEmoji: null, manorIcon: null, iconBgHidden: false, emojiOnly: false, operatorName: null, agentOverrides: {} },
   setAccentColor: () => {},
   setManorName: () => {},
   setManorSubtitle: () => {},
@@ -41,6 +42,7 @@ const SettingsContext = createContext<SettingsContextValue>({
   setManorIcon: () => {},
   setIconBgHidden: () => {},
   setEmojiOnly: () => {},
+  setOperatorName: () => {},
   setAgentOverride: () => {},
   clearAgentOverride: () => {},
   getAgentDisplay: (agent) => ({ emoji: agent.emoji }),
@@ -122,6 +124,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [settings, update],
   )
 
+  const setOperatorName = useCallback(
+    (name: string | null) => {
+      update({ ...settings, operatorName: name || null })
+    },
+    [settings, update],
+  )
+
   const setAgentOverride = useCallback(
     (agentId: string, override: AgentOverride) => {
       const existing = settings.agentOverrides[agentId] || {}
@@ -165,6 +174,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       manorIcon: null,
       iconBgHidden: false,
       emojiOnly: false,
+      operatorName: null,
       agentOverrides: {},
     }
     update(defaults)
@@ -181,6 +191,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setManorIcon,
         setIconBgHidden,
         setEmojiOnly,
+        setOperatorName,
         setAgentOverride,
         clearAgentOverride,
         getAgentDisplay,

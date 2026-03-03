@@ -5,6 +5,7 @@ import { ChevronRight, RotateCcw, Upload, X } from 'lucide-react'
 import type { Agent } from '@/lib/types'
 import { useSettings } from '@/app/settings-provider'
 import { AgentAvatar } from '@/components/AgentAvatar'
+import { OnboardingWizard } from '@/components/OnboardingWizard'
 
 // ---------------------------------------------------------------------------
 // Accent color presets
@@ -72,6 +73,7 @@ export default function SettingsPage() {
     resetAll,
   } = useSettings()
 
+  const [wizardOpen, setWizardOpen] = useState(false)
   const [agents, setAgents] = useState<Agent[]>([])
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null)
   const [nameValue, setNameValue] = useState(settings.manorName ?? '')
@@ -282,7 +284,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 className="apple-input"
-                placeholder="Manor"
+                placeholder="Agent Claw"
                 value={nameValue}
                 onChange={(e) => setNameValue(e.target.value)}
                 onBlur={() => setManorName(nameValue || null)}
@@ -834,8 +836,25 @@ export default function SettingsPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: 'var(--space-3)',
             }}
           >
+            <button
+              onClick={() => setWizardOpen(true)}
+              style={{
+                padding: 'var(--space-2) var(--space-6)',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--accent)',
+                color: '#000',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 'var(--text-body)',
+                fontWeight: 'var(--weight-semibold)',
+                transition: 'all 150ms var(--ease-spring)',
+              }}
+            >
+              Re-run Setup
+            </button>
             <button
               onClick={() => {
                 if (window.confirm('Reset all settings to defaults?')) {
@@ -858,6 +877,10 @@ export default function SettingsPage() {
             </button>
           </div>
         </section>
+
+        {wizardOpen && (
+          <OnboardingWizard forceOpen onClose={() => setWizardOpen(false)} />
+        )}
       </div>
     </div>
   )

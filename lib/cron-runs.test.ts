@@ -18,6 +18,7 @@ import { getCronRuns } from './cron-runs'
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.stubEnv('WORKSPACE_PATH', '/tmp/test-workspace')
   mockExistsSync.mockReturnValue(true)
 })
 

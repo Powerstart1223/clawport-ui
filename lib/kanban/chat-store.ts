@@ -1,7 +1,6 @@
 import { readFileSync, appendFileSync, mkdirSync, existsSync } from 'fs'
 import path from 'path'
-
-const WORKSPACE_PATH = process.env.WORKSPACE_PATH || '/Users/johnrice/.openclaw/workspace'
+import { requireEnv } from '@/lib/env'
 
 /** Serializable chat message (no isStreaming — UI-only field) */
 export interface StoredChatMessage {
@@ -13,7 +12,7 @@ export interface StoredChatMessage {
 
 /** Derive the chats directory from WORKSPACE_PATH */
 function getChatsDir(): string {
-  return path.resolve(WORKSPACE_PATH, '..', 'kanban', 'chats')
+  return path.resolve(requireEnv('WORKSPACE_PATH'), '..', 'kanban', 'chats')
 }
 
 /**

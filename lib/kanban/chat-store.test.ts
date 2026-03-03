@@ -25,6 +25,7 @@ import { getChatMessages, appendChatMessages, StoredChatMessage } from './chat-s
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.stubEnv('WORKSPACE_PATH', '/tmp/test-workspace')
   mockExistsSync.mockReturnValue(true)
 })
 

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "vitest run"
+    "test": "vitest run",
+    "setup": "node scripts/setup.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.10.1",

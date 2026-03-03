@@ -1,8 +1,7 @@
 import { CronJob, CronDelivery } from '@/lib/types'
 import { execSync } from 'child_process'
 import { parseSchedule, describeCron } from './cron-utils'
-
-const OPENCLAW_BIN = process.env.OPENCLAW_BIN || '/Users/johnrice/.nvm/versions/node/v22.14.0/bin/openclaw'
+import { requireEnv } from '@/lib/env'
 
 const PREFIX_MAP: [string, string][] = [
   ['pulse-', 'pulse'],
@@ -32,7 +31,8 @@ function matchAgent(name: string): string | null {
 
 export async function getCrons(): Promise<CronJob[]> {
   try {
-    const raw = execSync(`${OPENCLAW_BIN} cron list --json`, {
+    const openclawBin = requireEnv('OPENCLAW_BIN')
+    const raw = execSync(`${openclawBin} cron list --json`, {
       encoding: 'utf-8',
       timeout: 10000,
     })

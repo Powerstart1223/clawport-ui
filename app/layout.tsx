@@ -4,9 +4,10 @@ import { ThemeProvider } from './providers';
 import { SettingsProvider } from './settings-provider';
 import { Sidebar } from '@/components/Sidebar';
 import { DynamicFavicon } from '@/components/DynamicFavicon';
+import { OnboardingWizard } from '@/components/OnboardingWizard';
 
 export const metadata: Metadata = {
-  title: 'Manor -- Command Centre',
+  title: 'Agent Claw -- Command Centre',
   description: 'AI Agent Management Dashboard',
 };
 
@@ -21,6 +22,7 @@ export default function RootLayout({
         <ThemeProvider>
           <SettingsProvider>
             <DynamicFavicon />
+            <OnboardingWizard />
             <div
               className="flex h-screen overflow-hidden"
               style={{ background: 'var(--bg)' }}

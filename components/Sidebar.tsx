@@ -81,7 +81,7 @@ export function Sidebar() {
                   color: 'var(--text-primary)',
                 }}
               >
-                {settings.manorName ?? 'Manor'}
+                {settings.manorName ?? 'Agent Claw'}
               </div>
               <div
                 style={{

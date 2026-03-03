@@ -47,8 +47,11 @@ export async function POST(
 
   const { messages } = result
 
+  const rawBody = body as Record<string, unknown>
+  const operatorName = typeof rawBody.operatorName === 'string' ? rawBody.operatorName : 'Operator'
+
   const systemPrompt = agent.soul
-    ? `${agent.soul}\n\nYou are speaking directly with John, your operator. Stay fully in character. Be concise — this is a live chat. 2-4 sentences unless detail is asked for. No em dashes.`
+    ? `${agent.soul}\n\nYou are speaking directly with ${operatorName}, your operator. Stay fully in character. Be concise — this is a live chat. 2-4 sentences unless detail is asked for. No em dashes.`
     : `You are ${agent.name}, ${agent.title}. Respond in character. Be concise. No em dashes.`
 
   // When the LATEST user message contains images, use the OpenClaw gateway's

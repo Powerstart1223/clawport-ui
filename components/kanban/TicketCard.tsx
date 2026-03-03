@@ -69,6 +69,7 @@ export function TicketCard({ ticket, agent, onClick, isWorking }: TicketCardProp
         cursor: isDragging ? 'grabbing' : 'grab',
         opacity: isDragging ? 0.6 : 1,
         border: '1px solid var(--separator)',
+        borderLeft: agent ? `3px solid ${agent.color}` : '1px solid var(--separator)',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--space-2)',
@@ -76,6 +77,29 @@ export function TicketCard({ ticket, agent, onClick, isWorking }: TicketCardProp
         transition: 'opacity 150ms var(--ease-smooth)',
       }}
     >
+      {/* Agent row */}
+      {agent && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+          }}
+        >
+          <AgentAvatar agent={agent} size={28} borderRadius={8} />
+          <span
+            style={{
+              fontSize: 'var(--text-caption1)',
+              fontWeight: 600,
+              color: 'var(--text-secondary)',
+              lineHeight: 1.2,
+            }}
+          >
+            {agent.name}
+          </span>
+        </div>
+      )}
+
       {/* Priority + Title */}
       <div
         style={{
@@ -166,27 +190,11 @@ export function TicketCard({ ticket, agent, onClick, isWorking }: TicketCardProp
           </span>
         )}
 
-        {agent && (
-          <span
-            style={{
-              fontSize: 'var(--text-caption2)',
-              color: 'var(--text-tertiary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              marginLeft: 'auto',
-            }}
-          >
-            <AgentAvatar agent={agent} size={16} borderRadius={4} />
-            <span>{agent.name}</span>
-          </span>
-        )}
-
         <span
           style={{
             fontSize: 'var(--text-caption2)',
             color: 'var(--text-quaternary)',
-            marginLeft: agent ? 0 : 'auto',
+            marginLeft: 'auto',
           }}
           title={new Date(ticket.createdAt).toLocaleString()}
         >

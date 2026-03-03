@@ -15,6 +15,7 @@ import { getCrons } from './crons'
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.stubEnv('OPENCLAW_BIN', '/usr/local/bin/openclaw')
 })
 
 // --- Well-formed data ---

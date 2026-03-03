@@ -346,7 +346,7 @@ export function GlobalSearch() {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Search Manor"
+        aria-label="Search Agent Claw"
         className="animate-scale-in"
         onKeyDown={handleKeyDown}
         style={{
@@ -386,8 +386,8 @@ export function GlobalSearch() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search Manor..."
-            aria-label="Search Manor"
+            placeholder="Search Agent Claw..."
+            aria-label="Search Agent Claw"
             style={{
               flex: 1,
               background: 'transparent',

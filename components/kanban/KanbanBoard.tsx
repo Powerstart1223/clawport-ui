@@ -15,6 +15,7 @@ interface KanbanBoardProps {
   onMoveTicket: (ticketId: string, status: TicketStatus) => void
   onCreateTicket: () => void
   isWorking?: (ticketId: string) => boolean
+  filterAgentId?: string | null
 }
 
 export function KanbanBoard({
@@ -24,6 +25,7 @@ export function KanbanBoard({
   onMoveTicket,
   onCreateTicket,
   isWorking,
+  filterAgentId,
 }: KanbanBoardProps) {
   return (
     <div
@@ -38,7 +40,10 @@ export function KanbanBoard({
       }}
     >
       {COLUMNS.map((column) => {
-        const columnTickets = getTicketsByStatus(tickets, column.id)
+        const allColumnTickets = getTicketsByStatus(tickets, column.id)
+        const columnTickets = filterAgentId
+          ? allColumnTickets.filter((t) => t.assigneeId === filterAgentId)
+          : allColumnTickets
 
         return (
           <KanbanColumn

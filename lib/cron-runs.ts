@@ -1,12 +1,11 @@
 import { CronRun } from '@/lib/types'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import path from 'path'
-
-const WORKSPACE_PATH = process.env.WORKSPACE_PATH || '/Users/johnrice/.openclaw/workspace'
+import { requireEnv } from '@/lib/env'
 
 /** Derive the cron runs directory from WORKSPACE_PATH (go up from workspace to .openclaw/cron/runs) */
 function getRunsDir(): string {
-  return path.resolve(WORKSPACE_PATH, '..', 'cron', 'runs')
+  return path.resolve(requireEnv('WORKSPACE_PATH'), '..', 'cron', 'runs')
 }
 
 /**

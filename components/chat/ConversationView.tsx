@@ -5,6 +5,7 @@ import type { Agent } from '@/lib/types'
 import type { Conversation, ConversationStore, Message, MediaAttachment } from '@/lib/conversations'
 import { parseMedia, addMessage, updateLastMessage } from '@/lib/conversations'
 import { buildApiContent } from '@/lib/multimodal'
+import { useSettings } from '@/app/settings-provider'
 import { FileAttachment } from './FileAttachment'
 import { MediaPreview } from './MediaPreview'
 import { AgentAvatar } from '@/components/AgentAvatar'
@@ -286,6 +287,7 @@ function renderMedia(media: MediaAttachment[], isUser: boolean) {
 
 export function ConversationView({ agent, conversation, onUpdate, onBack }: ConversationViewProps) {
   const router = useRouter()
+  const { settings } = useSettings()
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [pendingAttachments, setPendingAttachments] = useState<MediaAttachment[]>([])
@@ -361,7 +363,7 @@ export function ConversationView({ agent, conversation, onUpdate, onBack }: Conv
       const res = await fetch(`/api/chat/${agent.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages }),
+        body: JSON.stringify({ messages: apiMessages, operatorName: settings.operatorName }),
       })
 
       if (!res.ok || !res.body) throw new Error('Stream failed')

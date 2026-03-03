@@ -2,7 +2,7 @@
   {
     "id": "jarvis",
     "name": "Jarvis",
-    "title": "Manor Orchestrator",
+    "title": "Orchestrator",
     "reportsTo": null,
     "directReports": ["vera", "lumen", "herald", "pulse", "echo", "sage", "kaze", "spark", "scribe"],
     "soulPath": "SOUL.md",
@@ -11,7 +11,7 @@
     "emoji": "\ud83e\udd16",
     "tools": ["exec", "read", "write", "edit", "web_search", "tts", "message", "sessions_spawn", "memory_search"],
     "memoryPath": null,
-    "description": "Manor orchestrator. Manages the team, holds memory, delivers briefings."
+    "description": "Top-level orchestrator. Manages the team, holds memory, delivers briefings."
   },
   {
     "id": "vera",
@@ -137,7 +137,7 @@
     "emoji": "\u270d\ufe0f",
     "tools": ["read", "write"],
     "memoryPath": null,
-    "description": "1500-2000 word posts in John's voice."
+    "description": "1500-2000 word posts in the operator's voice."
   },
   {
     "id": "auditor",
@@ -179,7 +179,7 @@
     "emoji": "\ud83d\udd8a\ufe0f",
     "tools": ["read", "write"],
     "memoryPath": null,
-    "description": "Writes LinkedIn posts in John's voice."
+    "description": "Writes LinkedIn posts in the operator's voice."
   },
   {
     "id": "maven",

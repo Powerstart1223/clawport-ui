@@ -1,17 +1,18 @@
-# Manor UI — Developer Guide
+# Manor UI -- Developer Guide
 
 ## Quick Reference
 
 ```bash
+npm run setup        # Auto-detect OpenClaw config, write .env.local
 npm run dev          # Start dev server (Turbopack, port 3000)
-npm test             # Run all 153 tests via Vitest
+npm test             # Run all 288 tests via Vitest (17 suites)
 npx tsc --noEmit     # Type-check (expect 0 errors)
 npx next build       # Production build
 ```
 
 ## Project Overview
 
-Manor UI is a Next.js 16 dashboard for managing OpenClaw AI agents. It provides an org chart (Manor Map), direct agent chat with multimodal support, cron monitoring, and memory browsing. All AI calls route through the OpenClaw gateway — no separate API keys needed.
+Manor UI is a Next.js 16 dashboard for managing OpenClaw AI agents. It provides an org chart (Manor Map), direct agent chat with multimodal support, cron monitoring, and memory browsing. All AI calls route through the OpenClaw gateway -- no separate API keys needed.
 
 ## Tech Stack
 
@@ -25,18 +26,43 @@ Manor UI is a Next.js 16 dashboard for managing OpenClaw AI agents. It provides 
 ## Environment Variables
 
 ```env
-WORKSPACE_PATH       # Required — path to .openclaw/workspace
-OPENCLAW_BIN         # Required — path to openclaw binary
-OPENCLAW_GATEWAY_TOKEN  # Required — gateway auth token
-ELEVENLABS_API_KEY   # Optional — voice indicators
+WORKSPACE_PATH       # Required -- path to .openclaw/workspace
+OPENCLAW_BIN         # Required -- path to openclaw binary
+OPENCLAW_GATEWAY_TOKEN  # Required -- gateway auth token
+ELEVENLABS_API_KEY   # Optional -- voice indicators
 ```
 
+Run `npm run setup` to auto-detect all required values from your local OpenClaw installation.
+
 ## Architecture
+
+### Agent Registry Resolution
+
+```
+loadRegistry() checks:
+  1. $WORKSPACE_PATH/manor/agents.json  (user override)
+  2. Bundled lib/agents.json            (default)
+```
+
+`lib/agents-registry.ts` exports `loadRegistry()`. `lib/agents.ts` calls it to build the full agent list (merging in SOUL.md content from the workspace). Users customize their agent team by dropping an `agents.json` into their workspace -- no source edits needed.
+
+### operatorName Flow
+
+```
+OnboardingWizard / Settings page
+  -> ManorSettings.operatorName (localStorage)
+  -> settings-provider.tsx (React context)
+  -> NavLinks.tsx (dynamic initials + display name)
+  -> ConversationView.tsx (sends operatorName in POST body)
+  -> /api/chat/[id] route (injects into system prompt: "You are speaking with {operatorName}")
+```
+
+No hardcoded operator names anywhere. Falls back to "Operator" / "??" when unset.
 
 ### Chat Pipeline (Text)
 
 ```
-Client → POST /api/chat/[id] → OpenAI SDK → localhost:18789/v1/chat/completions → Claude
+Client -> POST /api/chat/[id] -> OpenAI SDK -> localhost:18789/v1/chat/completions -> Claude
                                              (streaming SSE response)
 ```
 
@@ -46,18 +72,18 @@ The gateway's HTTP endpoint strips image_url content. Vision uses the CLI agent 
 
 ```
 Client resizes image to 1200px max (Canvas API)
-  → base64 data URL in message
-  → POST /api/chat/[id]
-  → Detects image in LATEST user message only (not history)
-  → execFile: openclaw gateway call chat.send --params <json> --token <token>
-  → Polls: openclaw gateway call chat.history every 2s
-  → Matches response by timestamp >= sendTs
-  → Returns assistant text via SSE
+  -> base64 data URL in message
+  -> POST /api/chat/[id]
+  -> Detects image in LATEST user message only (not history)
+  -> execFile: openclaw gateway call chat.send --params <json> --token <token>
+  -> Polls: openclaw gateway call chat.history every 2s
+  -> Matches response by timestamp >= sendTs
+  -> Returns assistant text via SSE
 ```
 
 Key files: `lib/anthropic.ts` (send + poll logic), `app/api/chat/[id]/route.ts` (routing)
 
-**Why send-then-poll?** `chat.send` is async — it returns `{runId, status: "started"}` immediately. The `--expect-final` flag doesn't block for this method. We poll `chat.history` until the assistant's response appears.
+**Why send-then-poll?** `chat.send` is async -- it returns `{runId, status: "started"}` immediately. The `--expect-final` flag doesn't block for this method. We poll `chat.history` until the assistant's response appears.
 
 **Why CLI and not WebSocket?** The gateway WebSocket requires device keypair signing for `operator.write` scope (needed by `chat.send`). The CLI has the device keys; custom clients don't.
 
@@ -67,18 +93,18 @@ Key files: `lib/anthropic.ts` (send + poll logic), `app/api/chat/[id]/route.ts` 
 
 ```
 Browser MediaRecorder (webm/opus or mp4)
-  → AudioContext AnalyserNode captures waveform (40-60 samples)
-  → Stop → audioBlob + waveform data
-  → POST /api/transcribe (Whisper via gateway)
-  → Transcription text sent as message content
-  → Audio data URL + waveform stored in message for playback
+  -> AudioContext AnalyserNode captures waveform (40-60 samples)
+  -> Stop -> audioBlob + waveform data
+  -> POST /api/transcribe (Whisper via gateway)
+  -> Transcription text sent as message content
+  -> Audio data URL + waveform stored in message for playback
 ```
 
 Key files: `lib/audio-recorder.ts`, `lib/transcribe.ts`, `components/chat/VoiceMessage.tsx`
 
 ### Conversation Persistence
 
-Messages stored in localStorage as JSON. Media attachments are base64 data URLs (not blob URLs — those don't survive reload). The `conversations.ts` module provides `addMessage()`, `updateLastMessage()`, and `parseMedia()`.
+Messages stored in localStorage as JSON. Media attachments are base64 data URLs (not blob URLs -- those don't survive reload). The `conversations.ts` module provides `addMessage()`, `updateLastMessage()`, and `parseMedia()`.
 
 ### Theming
 
@@ -87,14 +113,38 @@ Five themes defined via CSS custom properties in `app/globals.css`:
 - Components use semantic tokens: `--bg`, `--text-primary`, `--accent`, `--separator`, etc.
 - Theme state managed by `app/providers.tsx` ThemeProvider (localStorage)
 
+## Onboarding
+
+`components/OnboardingWizard.tsx` -- 5-step first-run setup wizard:
+
+1. **Welcome** -- manor name, subtitle, operator name (with live sidebar preview)
+2. **Theme** -- pick from available themes (applies live)
+3. **Accent Color** -- color preset grid
+4. **Voice Chat** -- microphone permission test (optional)
+5. **Overview** -- feature summary (Agent Map, Chat, Kanban, Crons, Memory)
+
+**First-run detection:** checks `localStorage('manor-onboarded')`. If absent, wizard shows automatically.
+
+**Mounting:** `OnboardingWizard` is rendered in `app/layout.tsx` (always present, self-hides when not needed).
+
+**Re-run:** settings page has a button that renders `<OnboardingWizard forceOpen onClose={...} />`. When `forceOpen` is true, the wizard pre-populates from current settings and does not set `manor-onboarded` on completion.
+
+## Environment Safety
+
+`lib/env.ts` exports `requireEnv(name)` -- throws a clear error with the missing variable name and a pointer to `.env.example`.
+
+**Critical pattern:** call `requireEnv()` inside functions, never at module top level. This prevents imports from crashing during `next build` or test runs when env vars are not set.
+
+Used by: `lib/memory.ts`, `lib/cron-runs.ts`, `lib/kanban/chat-store.ts`, `lib/crons.ts`
+
 ## File Map
 
 ### API Routes
 
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/api/agents` | GET | All agents from JSON registry + SOUL.md |
-| `/api/chat/[id]` | POST | Agent chat — text (streaming) or vision (send+poll) |
+| `/api/agents` | GET | All agents from registry + SOUL.md |
+| `/api/chat/[id]` | POST | Agent chat -- text (streaming) or vision (send+poll) |
 | `/api/crons` | GET | Cron jobs via `openclaw cron list --json` |
 | `/api/memory` | GET | Memory files from workspace |
 | `/api/tts` | POST | Text-to-speech via OpenClaw |
@@ -104,28 +154,48 @@ Five themes defined via CSS custom properties in `app/globals.css`:
 
 | File | Purpose |
 |------|---------|
-| `lib/agents.ts` | Agent registry + SOUL.md filesystem reader |
+| `lib/agents.ts` | Agent list builder -- calls `loadRegistry()`, merges SOUL.md |
+| `lib/agents-registry.ts` | `loadRegistry()` -- workspace override -> bundled fallback |
+| `lib/agents.json` | Bundled default agent registry |
 | `lib/anthropic.ts` | Vision pipeline: `hasImageContent`, `extractImageAttachments`, `buildTextPrompt`, `sendViaOpenClaw` (send + poll), `execCli` |
-| `lib/audio-recorder.ts` | `createAudioRecorder()` — MediaRecorder + waveform via AnalyserNode |
+| `lib/audio-recorder.ts` | `createAudioRecorder()` -- MediaRecorder + waveform via AnalyserNode |
 | `lib/conversations.ts` | Conversation store with localStorage persistence |
 | `lib/crons.ts` | Cron data fetching via CLI |
-| `lib/multimodal.ts` | `buildApiContent()` — converts Message+Media to OpenAI API format |
-| `lib/transcribe.ts` | `transcribe(audioBlob)` — Whisper API with graceful fallback |
-| `lib/validation.ts` | `validateChatMessages()` — validates text + multimodal content arrays |
+| `lib/env.ts` | `requireEnv(name)` -- safe env var access with clear errors |
+| `lib/multimodal.ts` | `buildApiContent()` -- converts Message+Media to OpenAI API format |
+| `lib/settings.ts` | `ManorSettings` type, `loadSettings()`, `saveSettings()` (localStorage) |
+| `lib/transcribe.ts` | `transcribe(audioBlob)` -- Whisper API with graceful fallback |
+| `lib/validation.ts` | `validateChatMessages()` -- validates text + multimodal content arrays |
 
 ### Chat Components
 
 | Component | Purpose |
 |-----------|---------|
-| `ConversationView.tsx` | Main chat: messages, input, recording UI, paste/drop handlers, file staging, clear chat |
+| `ConversationView.tsx` | Main chat: messages, input, recording, paste/drop, file staging. Sends `operatorName` in POST body. |
 | `VoiceMessage.tsx` | Waveform playback: play/pause + animated bar visualization |
 | `FileAttachment.tsx` | File bubble: icon by type + name + size + download |
 | `MediaPreview.tsx` | Pre-send strip of staged attachments with remove buttons |
 | `AgentList.tsx` | Desktop agent sidebar with unread badges |
 
+### Other Components
+
+| Component | Purpose |
+|-----------|---------|
+| `OnboardingWizard.tsx` | 5-step first-run setup wizard (name, theme, accent, mic, overview) |
+| `NavLinks.tsx` | Sidebar nav with dynamic operator initials + name from settings |
+| `Sidebar.tsx` | Sidebar layout shell |
+| `AgentAvatar.tsx` | Agent emoji/image avatar with optional background |
+| `DynamicFavicon.tsx` | Updates favicon based on manor emoji/icon settings |
+
+### Scripts
+
+| File | Purpose |
+|------|---------|
+| `scripts/setup.mjs` | `npm run setup` -- auto-detects WORKSPACE_PATH, OPENCLAW_BIN, gateway token; writes `.env.local` |
+
 ## Testing
 
-9 test suites, 153 tests total. All in `lib/` directory.
+17 test suites, 288 tests total. All in `lib/` directory.
 
 ```bash
 npx vitest run                     # All tests
@@ -141,21 +211,36 @@ Key test patterns:
 
 ## Conventions
 
-- No external charting/media libraries — native Web APIs (Canvas, MediaRecorder, AudioContext)
+- No external charting/media libraries -- native Web APIs (Canvas, MediaRecorder, AudioContext)
 - Base64 data URLs for all persisted media (not blob URLs)
-- CSS custom properties for theming — no Tailwind color classes directly
+- CSS custom properties for theming -- no Tailwind color classes directly
 - Inline styles referencing CSS vars (e.g., `style={{ color: 'var(--text-primary)' }}`)
 - Tests colocated with source: `lib/foo.ts` + `lib/foo.test.ts`
 - Agent chat uses `claude-sonnet-4-6` model via OpenClaw gateway
 - No em dashes in agent responses (enforced via system prompt)
+- Call `requireEnv()` inside functions, not at module top level
+- No hardcoded operator names -- use `operatorName` from settings context
 
 ## Common Tasks
 
 ### Add a new agent
-Edit `lib/agents.ts` — add to the registry array. Auto-appears in map, chat, and detail pages.
+Edit `lib/agents.json` (or drop a custom `agents.json` into `$WORKSPACE_PATH/manor/`). Auto-appears in map, chat, and detail pages.
+
+### Customize agents for your workspace
+Create `$WORKSPACE_PATH/manor/agents.json` with your own agent entries. Manor UI loads this instead of the bundled default. Format matches `lib/agents.json`.
+
+### Re-run onboarding wizard
+Go to Settings page and click "Re-run Setup Wizard". This opens the wizard with `forceOpen` so it pre-populates current values and does not reset the `manor-onboarded` flag.
+
+### Add a new setting field
+1. Add the field to `ManorSettings` interface in `lib/settings.ts`
+2. Add a default value in `DEFAULTS`
+3. Add parsing logic in `loadSettings()`
+4. Add a setter method in `app/settings-provider.tsx`
+5. Consume via `useSettings()` hook in components
 
 ### Change the chat model
-Edit `app/api/chat/[id]/route.ts` line 92 — change the `model` field in `openai.chat.completions.create()`.
+Edit `app/api/chat/[id]/route.ts` -- change the `model` field in `openai.chat.completions.create()`.
 
 ### Add a new theme
 Add a `[data-theme="name"]` block in `app/globals.css` with all CSS custom properties. Add the theme ID to `lib/themes.ts`.

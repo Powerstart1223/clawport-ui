@@ -4,7 +4,7 @@ export interface Agent {
   id: string               // slug, e.g. "vera"
   name: string             // display name, e.g. "VERA"
   title: string            // role title, e.g. "Chief Strategy Officer"
-  reportsTo: string | null // parent agent id (null for John/Jarvis root)
+  reportsTo: string | null // parent agent id (null for root orchestrator)
   directReports: string[]  // child agent ids
   soulPath: string | null  // absolute path to SOUL.md
   soul: string | null      // full SOUL.md content

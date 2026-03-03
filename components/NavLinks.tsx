@@ -6,6 +6,14 @@ import { useEffect, useState } from 'react';
 import { Map, MessageSquare, Clock, Brain, Columns3, Settings } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { CronJob } from '@/lib/types';
+import { useSettings } from '@/app/settings-provider';
+
+function getInitials(name: string | null): string {
+  if (!name) return '??'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
 
 // ---------------------------------------------------------------------------
 // Nav item definition
@@ -33,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function NavLinks() {
   const pathname = usePathname();
+  const { settings } = useSettings();
   const [agentCount, setAgentCount] = useState<number | null>(null);
   const [cronCount, setCronCount] = useState<number | null>(null);
   const [cronErrorCount, setCronErrorCount] = useState<number | null>(null);
@@ -230,7 +239,7 @@ export function NavLinks() {
               letterSpacing: '-0.02em',
             }}
           >
-            JR
+            {getInitials(settings.operatorName)}
           </div>
           <div style={{ minWidth: 0 }}>
             <div
@@ -243,7 +252,7 @@ export function NavLinks() {
                 whiteSpace: 'nowrap',
               }}
             >
-              John Rice
+              {settings.operatorName ?? 'Operator'}
             </div>
             <div
               style={{

@@ -1,7 +1,6 @@
 import { MemoryFile } from '@/lib/types'
 import { readFileSync, existsSync, statSync } from 'fs'
-
-const WORKSPACE_PATH = process.env.WORKSPACE_PATH || '/Users/johnrice/.openclaw/workspace'
+import { requireEnv } from '@/lib/env'
 
 function readMemoryFile(label: string, filePath: string): MemoryFile | null {
   try {
@@ -20,6 +19,7 @@ function readMemoryFile(label: string, filePath: string): MemoryFile | null {
 }
 
 export async function getMemoryFiles(): Promise<MemoryFile[]> {
+  const workspacePath = requireEnv('WORKSPACE_PATH')
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
@@ -28,11 +28,11 @@ export async function getMemoryFiles(): Promise<MemoryFile[]> {
   const yesterdayStr = yesterday.toISOString().slice(0, 10)
 
   const candidates: [string, string][] = [
-    ['Long-Term Memory (Jarvis)', WORKSPACE_PATH + '/MEMORY.md'],
-    ['Team Memory', WORKSPACE_PATH + '/memory/team-memory.md'],
-    ['Team Intel (JSON)', WORKSPACE_PATH + '/memory/team-intel.json'],
-    ['Daily Log (Today)', WORKSPACE_PATH + '/memory/' + todayStr + '.md'],
-    ['Daily Log (Yesterday)', WORKSPACE_PATH + '/memory/' + yesterdayStr + '.md'],
+    ['Long-Term Memory (Jarvis)', workspacePath + '/MEMORY.md'],
+    ['Team Memory', workspacePath + '/memory/team-memory.md'],
+    ['Team Intel (JSON)', workspacePath + '/memory/team-intel.json'],
+    ['Daily Log (Today)', workspacePath + '/memory/' + todayStr + '.md'],
+    ['Daily Log (Yesterday)', workspacePath + '/memory/' + yesterdayStr + '.md'],
   ]
 
   const files: MemoryFile[] = []
