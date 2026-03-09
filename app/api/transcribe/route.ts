@@ -2,10 +2,14 @@ export const runtime = 'nodejs'
 
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  baseURL: 'http://localhost:18789/v1',
-  apiKey: process.env.OPENCLAW_GATEWAY_TOKEN,
-})
+function getOpenClawClient() {
+  const token = process.env.OPENCLAW_GATEWAY_TOKEN
+  if (!token) return null
+  return new OpenAI({
+    baseURL: 'http://localhost:18789/v1',
+    apiKey: token,
+  })
+}
 
 export async function POST(request: Request) {
   let formData: FormData
@@ -21,6 +25,11 @@ export async function POST(request: Request) {
   }
 
   try {
+    const openai = getOpenClawClient()
+    if (!openai) {
+      return Response.json({ error: 'Missing OPENCLAW_GATEWAY_TOKEN env var.' }, { status: 500 })
+    }
+
     const transcription = await openai.audio.transcriptions.create({
       model: 'whisper-1',
       file: audioFile,

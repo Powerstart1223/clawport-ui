@@ -2,10 +2,14 @@ export const runtime = 'nodejs'
 
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  baseURL: 'http://localhost:18789/v1',
-  apiKey: process.env.OPENCLAW_GATEWAY_TOKEN,
-})
+function getOpenClawClient() {
+  const token = process.env.OPENCLAW_GATEWAY_TOKEN
+  if (!token) return null
+  return new OpenAI({
+    baseURL: 'http://localhost:18789/v1',
+    apiKey: token,
+  })
+}
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +18,14 @@ export async function POST(request: Request) {
     if (!text || typeof text !== 'string') {
       return new Response(JSON.stringify({ error: 'Missing or invalid "text" field' }), {
         status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    const openai = getOpenClawClient()
+    if (!openai) {
+      return new Response(JSON.stringify({ error: 'Missing OPENCLAW_GATEWAY_TOKEN env var.' }), {
+        status: 500,
         headers: { 'Content-Type': 'application/json' },
       })
     }

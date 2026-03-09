@@ -5,11 +5,14 @@ import { validateChatMessages } from '@/lib/validation'
 import { hasImageContent, extractImageAttachments, buildTextPrompt, sendViaOpenClaw } from '@/lib/anthropic'
 import OpenAI from 'openai'
 
-// Route through the OpenClaw gateway — no separate API key needed
-const openai = new OpenAI({
-  baseURL: 'http://localhost:18789/v1',
-  apiKey: process.env.OPENCLAW_GATEWAY_TOKEN,
-})
+function getOpenClawClient() {
+  const token = process.env.OPENCLAW_GATEWAY_TOKEN
+  if (!token) return null
+  return new OpenAI({
+    baseURL: 'http://localhost:18789/v1',
+    apiKey: token,
+  })
+}
 
 const GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || ''
 
@@ -88,6 +91,14 @@ export async function POST(
         Connection: 'keep-alive',
       },
     })
+  }
+
+  const openai = getOpenClawClient()
+  if (!openai) {
+    return new Response(
+      JSON.stringify({ error: 'Missing OPENCLAW_GATEWAY_TOKEN env var.' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    )
   }
 
   try {

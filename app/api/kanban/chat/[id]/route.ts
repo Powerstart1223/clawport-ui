@@ -3,10 +3,14 @@ export const runtime = 'nodejs'
 import { getAgent } from '@/lib/agents'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  baseURL: 'http://localhost:18789/v1',
-  apiKey: process.env.OPENCLAW_GATEWAY_TOKEN,
-})
+function getOpenClawClient() {
+  const token = process.env.OPENCLAW_GATEWAY_TOKEN
+  if (!token) return null
+  return new OpenAI({
+    baseURL: 'http://localhost:18789/v1',
+    apiKey: token,
+  })
+}
 
 const MAX_TITLE = 500
 const MAX_DESC = 5000
@@ -86,6 +90,14 @@ Help the user with this ticket. Stay in character as ${agent.name}, ${agent.titl
   const systemPrompt = agent.soul
     ? `${agent.soul}\n\n${ticketContext}`
     : ticketContext
+
+  const openai = getOpenClawClient()
+  if (!openai) {
+    return new Response(
+      JSON.stringify({ error: 'Missing OPENCLAW_GATEWAY_TOKEN env var.' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    )
+  }
 
   try {
     const stream = await openai.chat.completions.create({
