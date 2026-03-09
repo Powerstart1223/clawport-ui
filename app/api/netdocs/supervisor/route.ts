@@ -6,7 +6,7 @@ import { join } from 'path'
 import { spawn } from 'child_process'
 
 function pidPath(workspacePath: string) {
-  return join(workspacePath, 'netdocs_downloader.pid')
+  return join(workspacePath, 'netdocs_supervisor.pid')
 }
 
 function isAlive(pid: number) {
@@ -29,7 +29,7 @@ export async function GET() {
     const running = isAlive(pid)
     return NextResponse.json({ ok: true, running, pid })
   } catch (err) {
-    return apiErrorResponse(err, 'Failed to read downloader status')
+    return apiErrorResponse(err, 'Failed to read supervisor status')
   }
 }
 
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
     const { workspacePath } = getNetdocsPaths()
     const p = pidPath(workspacePath)
-    const script = join(workspacePath, 'netdocs_downloader.py')
+    const script = join(workspacePath, 'netdocs_supervisor.py')
 
     if (action === 'start') {
       if (existsSync(p)) {
@@ -51,13 +51,7 @@ export async function POST(request: Request) {
       const pyw = 'C:\\Users\\SJK\\AppData\\Local\\Programs\\Python\\Python313\\pythonw.exe'
       const py = 'python'
       const exe = existsSync(pyw) ? pyw : py
-
-      const child = spawn(exe, [script, '--loop'], {
-        cwd: workspacePath,
-        detached: true,
-        stdio: 'ignore',
-        windowsHide: true,
-      })
+      const child = spawn(exe, [script], { cwd: workspacePath, detached: true, stdio: 'ignore', windowsHide: true })
       child.unref()
       writeFileSync(p, String(child.pid), { encoding: 'utf-8' })
       return NextResponse.json({ ok: true, running: true, pid: child.pid })
@@ -77,17 +71,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, running: false, pid })
     }
 
-    if (action === 'poke') {
-      const pyw = 'C:\\Users\\SJK\\AppData\\Local\\Programs\\Python\\Python313\\pythonw.exe'
-      const py = 'python'
-      const exe = existsSync(pyw) ? pyw : py
-      const child = spawn(exe, [script], { cwd: workspacePath, stdio: 'ignore', detached: true, windowsHide: true })
-      child.unref()
-      return NextResponse.json({ ok: true, launched: true, pid: child.pid })
-    }
-
     return NextResponse.json({ ok: false, error: `Unknown action: ${action}` }, { status: 400 })
   } catch (err) {
-    return apiErrorResponse(err, 'Failed to start/stop downloader')
+    return apiErrorResponse(err, 'Failed to start/stop supervisor')
   }
 }

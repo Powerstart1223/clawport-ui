@@ -56,11 +56,15 @@ export async function POST(request: Request) {
         if (pid && isAlive(pid)) return NextResponse.json({ ok: true, running: true, pid })
       }
 
-      // Use python in PATH. If that fails, we'll return stderr via exception.
-      const child = spawn('python', [runnerScript, '--loop'], {
+      const pyw = 'C:\\Users\\SJK\\AppData\\Local\\Programs\\Python\\Python313\\pythonw.exe'
+      const py = 'python'
+      const exe = existsSync(pyw) ? pyw : py
+
+      const child = spawn(exe, [runnerScript, '--loop'], {
         cwd: workspacePath,
         detached: true,
         stdio: 'ignore',
+        windowsHide: true,
       })
       child.unref()
       writeFileSync(p, String(child.pid), { encoding: 'utf-8' })
@@ -83,7 +87,10 @@ export async function POST(request: Request) {
 
     if (action === 'poke') {
       // Run one tick (no loop) to consume a pending command quickly.
-      const child = spawn('python', [runnerScript], { cwd: workspacePath, stdio: 'ignore', detached: true })
+      const pyw = 'C:\\Users\\SJK\\AppData\\Local\\Programs\\Python\\Python313\\pythonw.exe'
+      const py = 'python'
+      const exe = existsSync(pyw) ? pyw : py
+      const child = spawn(exe, [runnerScript], { cwd: workspacePath, stdio: 'ignore', detached: true, windowsHide: true })
       child.unref()
       return NextResponse.json({ ok: true, launched: true, pid: child.pid })
     }

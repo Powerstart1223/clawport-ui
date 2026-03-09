@@ -197,11 +197,22 @@ export default function NetdocsPage() {
   }
 
   async function startMission() {
-    // One button: ensure browser + tabs, start runner, start downloader, resume.
-    await runner('start')
-    await openclaw('ensure_mission_tabs')
-    await downloader('start')
-    await sendControl('resume')
+    setControlBusy(true)
+    setControlMsg('starting mission…')
+    try {
+      const res = await fetch('/api/netdocs/start-mission', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || json?.ok === false) throw new Error(json?.step ? `failed at ${json.step}` : json?.error || `HTTP ${res.status}`)
+      setControlMsg('ok: mission started')
+      setTimeout(() => setControlBusy(false), 350)
+    } catch (e) {
+      setControlBusy(false)
+      setControlMsg(`error: ${(e as Error).message}`)
+    }
   }
 
   return (
